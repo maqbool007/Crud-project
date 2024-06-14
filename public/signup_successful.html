@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Successful</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+
+        }
+        #user-list li {
+            margin-bottom: 20px; 
+            padding: 1%;
+            background-color: rgb(125, 26, 26);
+            color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button {
+            display: block; 
+            margin-top: 10px; 
+            background-color: rgb(77, 14, 14);
+            padding: 8px 30px;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        h1{
+            font-size: 2.5rem;
+            padding: 1%;
+            background-color: rgb(77, 14, 14);
+            color: white;
+        }
+        input{
+            padding: 1% 3%;
+            font-weight:900 ;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Signup Successful</h1>
+    <ul id="user-list"></ul>
+
+    <script>
+        window.onload = async function () {
+            const response = await fetch('/users');
+            const users = await response.json();
+            const userListElement = document.getElementById('user-list');
+
+            users.forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Name: ${user.name}, Email: ${user.email}`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = async function () {
+                    const confirmation = confirm("Are you sure you want to delete this user?");
+                    if (confirmation) {
+                        try {
+                            const response = await fetch(`/users/${user._id}`, {
+                                method: 'DELETE'
+                            });
+                            if (response.ok) {
+                                listItem.remove();
+                            } else {
+                                throw new Error('Failed to delete user');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting user:', error.message);
+                            alert('Failed to delete user.'); 
+                        }
+                    }
+                };
+
+                const updateButton = document.createElement('button');
+                updateButton.textContent = 'Update';
+                updateButton.onclick = function () {
+                    showUpdateForm(user);
+                };
+
+                listItem.appendChild(deleteButton);
+                listItem.appendChild(updateButton);
+                userListElement.appendChild(listItem);
+            });
+        }
+
+        function showUpdateForm(user) {
+            const formDiv = document.createElement('div');
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = user.name;
+            const emailInput = document.createElement('input');
+            emailInput.type = 'text';
+            emailInput.value = user.email;
+            const updateButton = document.createElement('button');
+            updateButton.textContent = 'Update';
+            updateButton.onclick = async function () {
+                const newName = nameInput.value.trim();
+                const newemail = emailInput.value.trim();
+
+                if (newName && newemail) {
+                    await updateUser(user._id, newName, newemail);
+                }
+            };
+
+            formDiv.appendChild(nameInput);
+            formDiv.appendChild(emailInput);
+            formDiv.appendChild(updateButton);
+
+            document.getElementById('user-list').appendChild(formDiv);
+        }
+
+        async function updateUser(userId, newName, newemail) {
+            try {
+                const response = await fetch(`/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: newName,
+                        email: newemail
+                    })
+                });
+                if (response.ok) {
+                    location.reload(); 
+                } else {
+                    throw new Error('Failed to update user');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error.message);
+                alert('Failed to update user.');
+            }
+        }
+    </script>
+
+</body>
+
+</html>
